@@ -48,6 +48,9 @@ public class Queue extends JPanel implements Constants {
 	 * @return	The first object in the queue.
 	 */
 	public Object getNext() {
+		if(content.isEmpty()) {
+			return null;
+		}
 		return content.get(0);
 	}
 

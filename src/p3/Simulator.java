@@ -74,7 +74,6 @@ public class Simulator implements Constants
 			Event event = eventQueue.getNextEvent();
 			// Find out how much time that passed...
 			long timeDifference = event.getTime()-clock;
-			System.out.println(timeDifference);
 			// ...and update the clock.
 			clock = event.getTime();
 			// Let the memory unit and the GUI know that time has passed
@@ -100,7 +99,6 @@ public class Simulator implements Constants
 	 * @param event	The event to be processed.
 	 */
 	private void processEvent(Event event) {
-		System.out.println(event.getType());
 		switch (event.getType()) {
 			case NEW_PROCESS:
 				createProcess();
@@ -162,28 +160,47 @@ public class Simulator implements Constants
 	 * Simulates a process switch.
 	 */
 	private void switchProcess() {
-		if(cpu.getCurrentProcess()!=null){
+		System.out.println("Hello from SWITCH_PROCESS");
+		if (cpu.getCurrentProcess() != null) {
 			cpu.insertProcess(cpu.getCurrentProcess());
 		}
+
 		Process nextProcess = cpu.nextProcess();
-		gui.setCpuActive(nextProcess);
-		cpu.setCurrentProcess(nextProcess);
-		if(maxCpuTime > nextProcess.getIOtime()){
-			eventQueue.insertEvent(new Event(IO_REQUEST, clock+1));
-		}
-		if(nextProcess.getCpuTimeNeeded() >= nextProcess.getTimeSpentInCpu() + this.maxCpuTime) {
-			eventQueue.insertEvent(new Event(END_PROCESS, clock + nextProcess.getCpuTimeNeeded() - nextProcess.getTimeSpentInCpu()));
+		if (nextProcess == null) {
+			gui.setCpuActive(nextProcess);
+			System.out.println("CurrentProcess was null");
 		} else {
-			eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock+this.maxCpuTime));			
+			cpu.setCurrentProcess(nextProcess);
+			gui.setCpuActive(nextProcess);
+			if (maxCpuTime >= nextProcess.getIOtime()) {
+				eventQueue.insertEvent(new Event(IO_REQUEST, clock + 1));
+			}
+			// If this process will complete
+			if (nextProcess.getCpuTimeNeeded() <= nextProcess.getTimeSpentInCpu() + this.maxCpuTime) {
+				System.out.println("Hello from 2nd inner if");
+				eventQueue.insertEvent(new Event(END_PROCESS, clock
+						+ nextProcess.getCpuTimeNeeded()
+						- nextProcess.getTimeSpentInCpu()));
+				// If it will be grabbed by the RR-algo
+			} else {
+				System.out.println("Created new SWITCH_PROCESS");
+				eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock
+						+ this.maxCpuTime));
+			}
+
 		}
+		System.out.println("end of SWITCH_PROCESS");
 	}
 
 	/**
 	 * Ends the active process, and deallocates any resources allocated to it.
 	 */
 	private void endProcess() {
+		System.out.println("Hello from END_PROCESS");
 		Process currentProcess = cpu.removeActiveProcess();
+		gui.setCpuActive(null);
 		memory.processCompleted(currentProcess);
+		System.out.println("sent a SWITCH_PROCESS from END_PROCESS");
 		eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock+1));
 	}
 
@@ -192,8 +209,15 @@ public class Simulator implements Constants
 	 * perform an I/O operation.
 	 */
 	private void processIoRequest() {
+		System.out.println("Hello from IOREQ");
 		Process currentProcess = cpu.removeActiveProcess();
+
+		gui.setCpuActive(null);
+
 		io.insertProcess(currentProcess);
+		gui.setIoActive(io.pollFromQue());
+
+		System.out.println("sent a SWITCH_PROCESS from IOREQUEST");
 		eventQueue.insertEvent(new Event(SWITCH_PROCESS, clock+1));	
 	}
 
@@ -204,6 +228,7 @@ public class Simulator implements Constants
 	private void endIoOperation() {
 		Process currentProcess = io.removeActiveProcess();
 		cpu.insertProcess(currentProcess);
+		io.pollFromQue();
 	}
 
 	/**

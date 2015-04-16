@@ -19,7 +19,7 @@ public class CPU {
 	 * @param statistics	A reference to the statistics collector.
 	 */
     public CPU(Queue CPUQueue, long maxCpuTime, Statistics statistics) {
-		this.CPUQueue = CPUQueue;
+        this.CPUQueue = CPUQueue;
 		this.statistics = statistics;
 		this.maxCpuTime = maxCpuTime;
     }	
@@ -38,7 +38,11 @@ public class CPU {
     }
     	
     public Process nextProcess(){
-    	Process nextProcess = (Process)CPUQueue.getNext();
+    	Process nextProcess = (Process) CPUQueue.getNext();
+    	if(nextProcess == null) {
+    		return null;
+    	}
+
     	CPUQueue.removeNext();
     	return nextProcess;
     }
