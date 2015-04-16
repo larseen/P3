@@ -179,8 +179,7 @@ public class Simulator implements Constants
 			if (nextProcess.getCpuTimeNeeded() <= nextProcess.getTimeSpentInCpu() + this.maxCpuTime) {
 				System.out.println("Hello from 2nd inner if");
 				eventQueue.insertEvent(new Event(END_PROCESS, clock
-						+ nextProcess.getCpuTimeNeeded()
-						- nextProcess.getTimeSpentInCpu()));
+						+ nextProcess.getCpuTimeNeeded()));
 				// If it will be grabbed by the RR-algo
 			} else {
 				System.out.println("Created new SWITCH_PROCESS");
